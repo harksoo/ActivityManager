@@ -47,5 +47,7 @@
     <string name="popup_no">NO</string>
     <string name="ble_not_supported">Bluetooth Low Energy not supported</string>
     <string name="scan">Scan</string>
+    <string name="refresh">Refresh</string>
     <string name="cancel">Cancel</string>
+
 </resources>

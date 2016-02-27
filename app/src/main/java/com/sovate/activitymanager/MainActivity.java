@@ -1,5 +1,6 @@
 package com.sovate.activitymanager;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -11,14 +12,18 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -27,9 +32,13 @@ import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 2;
     private static final int UART_PROFILE_CONNECTED = 20;
     private static final int UART_PROFILE_DISCONNECTED = 21;
+
+
+    // permission constants
+    private final int MY_PERMISSION_GRANTED = 100;
 
     // Bluetooth variables
     private int mState = UART_PROFILE_DISCONNECTED;
@@ -53,8 +66,15 @@ public class MainActivity extends AppCompatActivity {
     private Button btnRemove;
     private final Handler handler = new Handler();
 
+    // Paired Device List
+    private List<BluetoothDevice> deviceList;
+    private DeviceAdapter deviceAdapter;
+    private Button btnGetPairedDevice;
+
+
+
     // Connection variables
-    private final String deviceName = "InBodyBand";
+    public final static String deviceName = "InBodyBand";
     private Boolean isBonded = false;
     private byte[] resultString = new byte[2048]; // Receiving buffer
     private byte[] lastBuf = null; // Re-sending Frame in case transfer fails
@@ -65,6 +85,51 @@ public class MainActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        init();
+
+        checkPermission();
+
+    }
+
+    // 권한확인 코드
+    private void checkPermission() {
+
+        Log.i("", "!!!!! CheckPermission : " + ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION));
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            //사용권한이 없을경우
+
+            //최초권한 요청인지 , 사용자에 의한 재요청인지 확인
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                Log.e("", "@@@@@@@@ permission  재요청");
+            }
+
+            //최초로 권한을 요청하는경우(처음실행)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,}, MY_PERMISSION_GRANTED);
+
+
+        } else {
+            //사용 권한이 있는경우
+            Log.e("", "@@@@@@@@@@@@@ ermission deny");
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSION_GRANTED:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "권한 획득", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "권한 허용을 선택하지않은경우 정상동작을 보장할수없습니다.", Toast.LENGTH_LONG).show();
+                }
+                break;
+        }
+
+
+    }
+
+    private void init() {
 
         // Check Bluetooth available to use
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -81,6 +146,10 @@ public class MainActivity extends AppCompatActivity {
         messageListView.setDivider(null);
         btnConnectDisconnect = (Button) findViewById(R.id.btn_select);
         btnRemove = (Button) findViewById(R.id.btn_remove);
+
+        btnGetPairedDevice = (Button) findViewById(R.id.btn_getPairedDevice);
+
+
         service_init();
 
         // Handler Remove button
@@ -91,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 // unpairDevice(GetPairedBLEDevice(deviceName));
                 //Toast.makeText(v, "not support", Toast.LENGTH_SHORT).show();
                 //Toast.makeText(this, "Bluetooth has turned on ", Toast.LENGTH_SHORT).show();
-                 Toast.makeText(getApplicationContext(), "not support", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "not support", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -106,12 +175,12 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     if (btnConnectDisconnect.getText().equals("Connect")) {
                         listAdapter.clear();
-                        mDevice = GetPairedBLEDevice(deviceName);
+                        //mDevice = GetPairedBLEDevice(deviceName);
 
                         // Start searching if no InBodyBAND connected
                         if (mDevice == null) {
                             isBonded = false;
-                            Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
+                            Intent newIntent = new Intent(MainActivity.this, PairedDeviceListActivity.class);
                             startActivityForResult(newIntent, REQUEST_SELECT_DEVICE);
                         } else {
                             // Start connection if InBodyBAND connected
@@ -130,7 +199,63 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        btnGetPairedDevice.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v) {
+                // get device list
+                GetPairedBLEDevices(MainActivity.deviceName);
+            }
+        });
+
         // Set initial UI state
+    }
+
+    private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+            // select text view에 해당 내용을 전달 하도록 구성
+
+//            Bundle b = new Bundle();
+//            b.putString(BluetoothDevice.EXTRA_DEVICE, deviceList.get(position).getAddress());
+//
+//            Intent result = new Intent();
+//            result.putExtras(b);
+//            setResult(Activity.RESULT_OK, result);
+//            finish();
+        }
+    };
+
+    private void GetPairedBLEDevices(String DeviceName) {
+        // list 정보 구성
+        deviceList = new ArrayList<BluetoothDevice>();
+        deviceAdapter = new DeviceAdapter(this, deviceList);
+
+        ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
+        newDevicesListView.setAdapter(deviceAdapter);
+        newDevicesListView.setOnItemClickListener(mDeviceClickListener);
+
+        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+
+        if (pairedDevices.size() != 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                if (device.getName() == null)
+                    continue;
+                if (DeviceName.equals(device.getName()))
+                {
+                    // add list
+                    deviceList.add(device);
+                    deviceAdapter.notifyDataSetChanged();
+                }
+            }
+
+//            if (deviceList.size() > 0) {
+//                mEmptyList.setVisibility(View.GONE);
+//                deviceAdapter.notifyDataSetChanged();
+//            }
+        }
     }
 
     // UART service connected/disconnected
@@ -533,7 +658,8 @@ public class MainActivity extends AppCompatActivity {
                     if (waitCnt > 4) {
                         if (mDevice != null) {
                             Log.e(TAG, "TIMEOUT");
-                            mService.disconnect();
+                            // 요청사항이 느릴수도 있음.... 확인 요망.
+                            //mService.disconnect();
                         }
                     } else if (waitCnt == 3) {
                         listAdapter.add("Resend buffer");

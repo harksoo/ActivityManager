@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
+    <!-- 검색 권한은 의미 없음....페어링은 기계적으로 처리 할 것임. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -21,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.sovate.activitymanager.DeviceListActivity" android:label="@string/app_name"
+        <activity android:name="com.sovate.activitymanager.PairedDeviceListActivity" android:label="@string/app_name"
             android:theme="@android:style/Theme.Dialog" />
         <service android:name="com.sovate.activitymanager.UartService" android:enabled="true" />
     </application>

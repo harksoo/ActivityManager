@@ -18,11 +18,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -30,14 +28,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-// Paired 안된 device를 찾는 Activity
-// TODO 추후 확인 요망.
-public class DeviceListActivity extends Activity {
+/**
+ * Created by harks on 2016-02-26.
+ */
+public class PairedDeviceListActivity extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
 
     private TextView mEmptyList;
@@ -45,7 +42,7 @@ public class DeviceListActivity extends Activity {
 
     List<BluetoothDevice> deviceList;
     private DeviceAdapter deviceAdapter;
-    Map<String, Integer> devRssiValues;
+
     private static final long SCAN_PERIOD = 10000; // Bluetooth search time
     private Handler mHandler;
     private boolean mScanning;
@@ -95,7 +92,7 @@ public class DeviceListActivity extends Activity {
 
         mEmptyList = (TextView) findViewById(R.id.empty);
         Button cancelButton = (Button) findViewById(R.id.btn_cancel);
-        cancelButton.setOnClickListener(new OnClickListener() {
+        cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -117,7 +114,6 @@ public class DeviceListActivity extends Activity {
         // list 정보 구성
         deviceList = new ArrayList<BluetoothDevice>();
         deviceAdapter = new DeviceAdapter(this, deviceList);
-        devRssiValues = new HashMap<String, Integer>();
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);
@@ -151,7 +147,6 @@ public class DeviceListActivity extends Activity {
         Log.d(TAG, "populateList");
         deviceList = new ArrayList<BluetoothDevice>();
         deviceAdapter = new DeviceAdapter(this, deviceList);
-        devRssiValues = new HashMap<String, Integer>();
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);
@@ -267,7 +262,6 @@ public class DeviceListActivity extends Activity {
             }
         }
 
-        devRssiValues.put(device.getAddress(), rssi);
         if (!deviceFound) {
             deviceList.add(device);
             mEmptyList.setVisibility(View.GONE);
@@ -297,7 +291,6 @@ public class DeviceListActivity extends Activity {
     @Override
     public void onStop() {
         super.onStop();
-        mBluetoothAdapter.stopLeScan(mLeScanCallback);
     }
 
     /*
@@ -308,18 +301,16 @@ public class DeviceListActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBluetoothAdapter.stopLeScan(mLeScanCallback);
     }
 
     /*
      * Event return to main screen after terminating the current screen when a
      * found device is selected
      */
-    private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
+    private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
 
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
 
             Bundle b = new Bundle();
             b.putString(BluetoothDevice.EXTRA_DEVICE, deviceList.get(position).getAddress());
@@ -341,77 +332,4 @@ public class DeviceListActivity extends Activity {
         scanLeDevice(false);
     }
 
-    /*
-     * Device List class
-     */
-    class DeviceAdapter extends BaseAdapter {
-        Context context;
-        List<BluetoothDevice> devices;
-        LayoutInflater inflater;
-
-        public DeviceAdapter(Context context, List<BluetoothDevice> devices) {
-            this.context = context;
-            inflater = LayoutInflater.from(context);
-            this.devices = devices;
-        }
-
-        @Override
-        public int getCount() {
-            return devices.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return devices.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewGroup vg;
-
-            if (convertView != null) {
-                vg = (ViewGroup) convertView;
-            } else {
-                vg = (ViewGroup) inflater.inflate(R.layout.device_element, null);
-            }
-
-            BluetoothDevice device = devices.get(position);
-            final TextView tvadd = ((TextView) vg.findViewById(R.id.address));
-            final TextView tvname = ((TextView) vg.findViewById(R.id.name));
-            final TextView tvpaired = (TextView) vg.findViewById(R.id.paired);
-            final TextView tvrssi = (TextView) vg.findViewById(R.id.rssi);
-
-            tvrssi.setVisibility(View.VISIBLE);
-            byte rssival = (byte) devRssiValues.get(device.getAddress()).intValue();
-            if (rssival != 0) {
-                tvrssi.setText("Rssi = " + String.valueOf(rssival));
-            }
-
-            tvname.setText(device.getName());
-            tvadd.setText(device.getAddress());
-            if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                Log.i(TAG, "device::" + device.getName());
-                tvname.setTextColor(Color.WHITE);
-                tvadd.setTextColor(Color.WHITE);
-                tvpaired.setTextColor(Color.GRAY);
-                tvpaired.setVisibility(View.VISIBLE);
-                tvpaired.setText(R.string.paired);
-                tvrssi.setVisibility(View.VISIBLE);
-                tvrssi.setTextColor(Color.WHITE);
-
-            } else {
-                tvname.setTextColor(Color.WHITE);
-                tvadd.setTextColor(Color.WHITE);
-                tvpaired.setVisibility(View.GONE);
-                tvrssi.setVisibility(View.VISIBLE);
-                tvrssi.setTextColor(Color.WHITE);
-            }
-            return vg;
-        }
-    }
 }
