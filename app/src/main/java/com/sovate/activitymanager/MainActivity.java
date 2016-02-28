@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private Button btnConnectDisconnect;
     private Button btnRemove;
     private final Handler handler = new Handler();
+    private TextView txtviewDeviceStatus;
+
 
     // Paired Device List
     private List<BluetoothDevice> deviceList;
@@ -149,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
         btnGetPairedDevice = (Button) findViewById(R.id.btn_getPairedDevice);
 
+        txtviewDeviceStatus = (TextView) findViewById(R.id.deviceName);
+
 
         service_init();
 
@@ -216,7 +220,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+            // TODO 기존 연결 제거 및 정보 초기화 처리
+
+            if(mService != null && mDevice != null){
+                // 초기화 처리
+                mService.disconnect();
+                mDevice = null;
+            }
+
+            mDevice = deviceList.get(position);
+
             // select text view에 해당 내용을 전달 하도록 구성
+            txtviewDeviceStatus.setText(mDevice.getAddress());
+
 
 //            Bundle b = new Bundle();
 //            b.putString(BluetoothDevice.EXTRA_DEVICE, deviceList.get(position).getAddress());
@@ -247,10 +263,11 @@ public class MainActivity extends AppCompatActivity {
                 {
                     // add list
                     deviceList.add(device);
-                    deviceAdapter.notifyDataSetChanged();
+
                 }
             }
 
+            deviceAdapter.notifyDataSetChanged();
 //            if (deviceList.size() > 0) {
 //                mEmptyList.setVisibility(View.GONE);
 //                deviceAdapter.notifyDataSetChanged();
@@ -440,6 +457,10 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        // TODO 시나리오에 맞게 다른 용도로 변경 요망.
+
+        // result code를 이용하지 않음.
         switch (requestCode) {
 
             // Case where found InBodyBAND is selected
@@ -781,26 +802,75 @@ public class MainActivity extends AppCompatActivity {
                         offset -= (byteCnt + 1);
 
                         String text = "";
-                        for (int i = 0; i < frame.length; i++)
-                            text = text += String.format("%02X ", frame[i]);
+                        for (int i = 0; i < frame.length; i++){
+                            text += String.format("%02X ", frame[i]);
+                        }
+
                         listAdapter.add("Rcv : " + text);
                         messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
 
                         waitCnt = 0;
                         lastBuf = null;
-                        if (frame[4] == 'A' && frame[5] == 'K') {
+                        if (frame[4] == 'A' && frame[5] == 'K') { // 0x41 0x4B
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                             }
                             fncSendCommand((byte) 'A', (byte) 'W', null);
-                        } else if (frame[4] == 'A' && frame[5] == 'W') {
+                        } else if (frame[4] == 'A' && frame[5] == 'W') { // 0x41 0x57
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                             }
+                            //fncSendCommand((byte) 'A', (byte) 'W', null);
                             fncSendCommand((byte) 'A', (byte) 'I', MakeAI());
-                        } else if (frame[4] == 'A' && frame[5] == 'I') {
+                        } else if (frame[4] == 'A' && frame[5] == 'I') { // 0x41 0x49 // 기기가 진동하는 효과가 있음. --> 기기 확인시에 필요함.
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                            }
+                            //fncSendCommand((byte) 'A', (byte) 'I', MakeAI());
+                            //fncSendCommand((byte) 'A', (byte) 'W', null);
+                            fncSendCommand((byte) 'A', (byte) 'E', null);
+                        } else if (frame[4] == 'A' && frame[5] == 'E') { // 0x41 0x45 : 최종 할동량 전송 처리
+
+                            int startPosData = 6;
+
+                            int year = (int)frame[startPosData + 0] + 2000;
+                            int month = (int)frame[startPosData + 1];
+                            int day = (int)frame[startPosData + 2];
+                            int hour = (int)frame[startPosData + 3];
+
+                            int steps = ((frame[startPosData + 4] & 0xff) << 8) | (frame[startPosData + 5] & 0xff);
+                            int runCount = ((frame[startPosData + 6] & 0xff) << 8) | (frame[startPosData + 7] & 0xff);
+
+                            int stepMinute = ((frame[startPosData + 8] & 0xff) << 8) | (frame[startPosData + 9] & 0xff);
+                            int runMinute = ((frame[startPosData + 10] & 0xff) << 8) | (frame[startPosData + 11] & 0xff);
+
+                            int stepCalorie = ((frame[startPosData + 12] & 0xff) << 8) | (frame[startPosData + 13] & 0xff);
+                            int runCalorie = ((frame[startPosData + 14] & 0xff) << 8) | (frame[startPosData + 15] & 0xff);
+
+                            int stepDistance = ((frame[startPosData + 16] & 0xff) << 8) | (frame[startPosData + 17] & 0xff);
+                            int runDistance = ((frame[startPosData + 18] & 0xff) << 8) | (frame[startPosData + 19] & 0xff);
+
+                            String log = String.format("year : %d, month : %d, day : %d, hour : %d \n", year, month, day, hour);
+                            log += String.format("걸음수 : %d, 뜀수 : %d, 걸은시간 : %d, 뛴시간  : %d \n", steps, runCount, stepMinute, runMinute);
+                            log += String.format("걸음 칼로리 : %d, 뜀 칼로리 : %d, 걸은 거리 : %d, 뛴 거리  : %d \n", stepCalorie, runCalorie, stepDistance, runDistance);
+
+                            Log.e(TAG, log);
+
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                            }
+                            fncSendCommand((byte) 'M', (byte) 'E', null);
+                        } else if (frame[4] == 'U' && frame[5] == 'E') { // 0x4D 0x45
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                            }
+                            fncSendCommand((byte) 'M', (byte) 'E', null);
+                        } else if (frame[4] == 'M' && frame[5] == 'E') { // 0x4D 0x45
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {

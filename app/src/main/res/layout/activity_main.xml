@@ -2,18 +2,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    >
 
+    <!-- Paired device list -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.31"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical" >
 
         <RelativeLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="#666" >
+            >
 
             <TextView
                 android:id="@+id/title_devices"
@@ -23,7 +25,6 @@
                 android:paddingLeft="12dp"
                 android:paddingRight="50dp"
                 android:text="@string/select_device"
-                android:textColor="#fff"
                 android:textSize="15dip" />
 
             <ImageView
@@ -33,7 +34,9 @@
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true"
                 android:src="@android:drawable/ic_menu_info_details" />
+
         </RelativeLayout>
+
         <LinearLayout android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
@@ -41,7 +44,6 @@
                 android:id="@+id/new_devices"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
                 android:stackFromBottom="true" />
 
             <TextView
@@ -50,11 +52,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/scanning" />
 
-            <Button
-                android:id="@+id/btn_getPairedDevice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/refresh" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -64,36 +62,48 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="0dp"
         android:layout_marginTop="2dp"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:gravity="center"
-        android:background="#CDCDCD" >
+        android:background="#CDCDCD"
+        >
 
         <TextView
             android:id="@+id/deviceName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/no_device"
+            android:padding="12dp"
             android:textAppearance="?android:attr/textAppearanceSmall" />
+
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+
+        <Button
+            android:id="@+id/btn_getPairedDevice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/refresh" />
+
 
         <Button
             android:id="@+id/btn_select"
             android:layout_width="wrap_content"
-            android:layout_weight="0.5"
             android:layout_height="wrap_content"
+
             android:padding="12dp"
             android:text="@string/connect" />
 
         <Button
             android:id="@+id/btn_remove"
             android:layout_width="wrap_content"
-            android:layout_weight="0.5"
             android:layout_height="wrap_content"
             android:padding="12dp"
             android:text="@string/removeBond" />
@@ -101,18 +111,19 @@
 
 
 
+
+
     <LinearLayout
         android:id="@+id/linearLayout3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.31"
+        android:layout_weight="1"
         android:orientation="vertical" >
 
         <RelativeLayout
             android:id="@+id/RelativeLayout2"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="4.11"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
             <ListView
@@ -125,6 +136,7 @@
 
         </RelativeLayout>
     </LinearLayout>
+
 
 
 
