@@ -18,10 +18,10 @@ import java.util.List;
 public class DeviceAdapter extends BaseAdapter {
     public static final String TAG = "UartService";
     Context context;
-    List<BluetoothDevice> devices;
+    List<DeviceInfo> devices;
     LayoutInflater inflater;
 
-    public DeviceAdapter(Context context, List<BluetoothDevice> devices) {
+    public DeviceAdapter(Context context, List<DeviceInfo> devices) {
         this.context = context;
         inflater = LayoutInflater.from(context);
         this.devices = devices;
@@ -52,7 +52,9 @@ public class DeviceAdapter extends BaseAdapter {
             vg = (ViewGroup) inflater.inflate(R.layout.device_element, null);
         }
 
-        BluetoothDevice device = devices.get(position);
+        BluetoothDevice device = devices.get(position).getDevice();
+
+        final TextView tvalias = ((TextView) vg.findViewById(R.id.alias));
         final TextView tvadd = ((TextView) vg.findViewById(R.id.address));
         final TextView tvname = ((TextView) vg.findViewById(R.id.name));
         final TextView tvpaired = (TextView) vg.findViewById(R.id.paired);
@@ -68,6 +70,9 @@ public class DeviceAdapter extends BaseAdapter {
             tvrssi.setText("Rssi = " + String.valueOf(rssival));
         }
 
+        tvalias.setText(devices.get(position).getName());
+        //tvalias.setText("Student_01");
+
         tvname.setText(device.getName());
         tvadd.setText(device.getAddress());
         if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
@@ -80,6 +85,7 @@ public class DeviceAdapter extends BaseAdapter {
 //            tvrssi.setVisibility(View.VISIBLE);
 //            tvrssi.setTextColor(Color.WHITE);
 
+            tvalias.setTextColor(Color.BLACK);
             tvname.setTextColor(Color.BLACK);
             tvadd.setTextColor(Color.BLACK);
             tvpaired.setTextColor(Color.BLACK);
@@ -89,6 +95,7 @@ public class DeviceAdapter extends BaseAdapter {
             tvrssi.setTextColor(Color.BLACK);
 
         } else {
+            tvalias.setTextColor(Color.BLACK);
             tvname.setTextColor(Color.BLACK);
             tvadd.setTextColor(Color.BLACK);
             tvpaired.setVisibility(View.GONE);

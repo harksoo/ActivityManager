@@ -5,6 +5,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+
     <!-- 검색 권한은 의미 없음....페어링은 기계적으로 처리 할 것임. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 

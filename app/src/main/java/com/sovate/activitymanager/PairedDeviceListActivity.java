@@ -35,6 +35,7 @@ import java.util.Set;
  * Created by harks on 2016-02-26.
  */
 public class PairedDeviceListActivity extends Activity {
+
     private BluetoothAdapter mBluetoothAdapter;
 
     private TextView mEmptyList;
@@ -113,7 +114,7 @@ public class PairedDeviceListActivity extends Activity {
     private void GetPairedBLEDevices(String DeviceName) {
         // list 정보 구성
         deviceList = new ArrayList<BluetoothDevice>();
-        deviceAdapter = new DeviceAdapter(this, deviceList);
+        //deviceAdapter = new DeviceAdapter(this, deviceList);
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);
@@ -146,7 +147,7 @@ public class PairedDeviceListActivity extends Activity {
     private void populateList() {
         Log.d(TAG, "populateList");
         deviceList = new ArrayList<BluetoothDevice>();
-        deviceAdapter = new DeviceAdapter(this, deviceList);
+        //deviceAdapter = new DeviceAdapter(this, deviceList);
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);

@@ -30,6 +30,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -38,6 +41,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -69,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Paired Device List
-    private List<BluetoothDevice> deviceList;
+    private List<DeviceInfo> deviceList;
     private DeviceAdapter deviceAdapter;
     private Button btnGetPairedDevice;
 
@@ -82,6 +87,13 @@ public class MainActivity extends AppCompatActivity {
     private byte[] lastBuf = null; // Re-sending Frame in case transfer fails
     private int offset = 0; // Received Data offset
     private int waitCnt = 0; // Connection status monitoring variables
+
+
+
+    // network result data
+    List<HttpApi.ActivityDevice> listActivityDevice;
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -131,7 +143,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void setListActivityDevice(List<HttpApi.ActivityDevice> list)
+    {
+        listActivityDevice = list;
+    }
+
+    private String getDeviceName(String mac){
+        for (HttpApi.ActivityDevice info: listActivityDevice) {
+            if(info.getMac().equalsIgnoreCase(mac))
+                return info.getName();
+        }
+
+        return "";
+    }
+
+
     private void init() {
+
+        HttpApi.setMainActivity(this);
+
+        HttpApi.getDevicesRequest();
 
         // Check Bluetooth available to use
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -203,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btnGetPairedDevice.setOnClickListener(new View.OnClickListener(){
+        btnGetPairedDevice.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -228,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                 mDevice = null;
             }
 
-            mDevice = deviceList.get(position);
+            mDevice = deviceList.get(position).getDevice();
 
             // select text view에 해당 내용을 전달 하도록 구성
             txtviewDeviceStatus.setText(mDevice.getAddress());
@@ -245,8 +276,33 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void GetPairedBLEDevices(String DeviceName) {
+
+        // Task 작업을 배운후에 처리를 하도록 한다.
+//        // Server에서 기본 데이터를 등록된 기기의 정보를 가져온다.
+//
+//
+//        // Thread로 웹서버에 접속
+//        new Thread() {
+//            public void run() {
+//                try {
+//                    JSONArray json = HttpClient.getDevice();
+//                }
+//                catch (Exception e) {
+//
+//                }
+//
+//
+//                Bundle bun = new Bundle();
+////                bun.putString("NAVER_HTML", naverHtml);
+////                Message msg = handler.obtainMessage();
+////                msg.setData(bun);
+////                handler.sendMessage(msg);
+//            }
+//        }.start();
+
+
         // list 정보 구성
-        deviceList = new ArrayList<BluetoothDevice>();
+        deviceList = new ArrayList<DeviceInfo>();
         deviceAdapter = new DeviceAdapter(this, deviceList);
 
         ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
@@ -262,7 +318,12 @@ public class MainActivity extends AppCompatActivity {
                 if (DeviceName.equals(device.getName()))
                 {
                     // add list
-                    deviceList.add(device);
+
+                    DeviceInfo info = new DeviceInfo();
+                    info.setDevice(device);
+                    info.setName(getDeviceName(device.getAddress()));
+
+                    deviceList.add(info);
 
                 }
             }
