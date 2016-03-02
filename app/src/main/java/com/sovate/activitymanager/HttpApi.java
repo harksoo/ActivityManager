@@ -18,7 +18,7 @@ import retrofit2.http.GET;
 public class HttpApi {
 
     // Networking
-    public static final String BASE_URL = "http://192.168.0.6:8080";
+    public static final String BASE_URL = "http://210.127.55.205:82";
 
     // Data
     public class ActivityDevice {
@@ -57,7 +57,7 @@ public class HttpApi {
     // Interface
     public interface ActivityService {
 
-        @GET("/healthcare/activity/devices")
+        @GET("/HealthCare/activity/devices")
         Call<List<ActivityDevice>> getDevices();
     }
 

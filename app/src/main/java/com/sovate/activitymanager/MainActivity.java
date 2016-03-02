@@ -924,20 +924,30 @@ public class MainActivity extends AppCompatActivity {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                             }
-                            fncSendCommand((byte) 'M', (byte) 'E', null);
-                        } else if (frame[4] == 'U' && frame[5] == 'E') { // 0x4D 0x45
+                            //fncSendCommand((byte) 'M', (byte) 'E', null);
+                            fncSendCommand((byte) 'U', (byte) 'B', null);
+                        } else if (frame[4] == 'U' && frame[5] == 'B') { // 0x55 0x42
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                             }
-                            fncSendCommand((byte) 'M', (byte) 'E', null);
-                        } else if (frame[4] == 'M' && frame[5] == 'E') { // 0x4D 0x45
+                            // connection 종료 처리 : 초기화가 된다.
+                            //fncSendCommand((byte) 'M', (byte) 'E', null);
+                        } else if (frame[4] == 'U' && frame[5] == 'E') { // 0x55 0x45 : 기기에서 연결 끊을대 주는 코드
                             try {
                                 Thread.sleep(500);
                             } catch (InterruptedException e) {
                             }
-                            fncSendCommand((byte) 'A', (byte) 'W', null);
+                            // 클라이언트에서 연결 종료 처리 함.
+                            //fncSendCommand((byte) 'M', (byte) 'E', null);
                         }
+//                        else if (frame[4] == 'M' && frame[5] == 'E') { // 0x4D 0x45
+//                            try {
+//                                Thread.sleep(500);
+//                            } catch (InterruptedException e) {
+//                            }
+//                            fncSendCommand((byte) 'A', (byte) 'W', null);
+//                        }
                     }
                 } catch (Exception e) {
                     Log.e(TAG, e.toString());
